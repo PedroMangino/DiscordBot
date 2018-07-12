@@ -13,24 +13,43 @@ module.exports = {
             return url;
         };
 
-        /*
-         request(url, { json: true }, (err, res, body) => {
-                if (err) { return console.log(err); }
-
-                callback(body);
-            });
-        */
-
         const urlRequestRankedData = (region, id) => {
             let url = 'https://' + region + '1.api.riotgames.com';
             url = url + '/lol/league/v3/positions/by-summoner/' + id + '?api_key=' + riotKey;
             return url;
         };
 
+        const urlRequestMatchData = (region, id) => {
+            let url = 'https://' + region + '1.api.riotgames.com';
+            url = url + '/lol/spectator/v3/active-games/by-summoner/' + id + '?api_key=' + riotKey;
+            return url;
+        };
+
         // possible subcommands in "lol" command
         switch(args[0].toLowerCase()) {
             case 'match':
-                message.channel.send('Not implemented yet!');
+                rp(urlRequestSummonerData(args[1], args[2]), { json: true })
+                .then(({ id }) => {
+                    rp(urlRequestMatchData(args[1], id), { json: true })
+                    .then(obj => {
+                        let ret = '```';
+                        ret += '==== Blue  Team ====\n';
+                        obj.participants.filter(elm => elm.teamId == '100').forEach(elm => {
+                            ret += elm.summonerName + '\n';
+                        });
+
+                        ret += '==== Red  Team ====\n';
+                        obj.participants.filter(elm => elm.teamId == '200').forEach(elm => {
+                            ret += elm.summonerName + '\n';
+                        });
+                        message.channel.send(ret + '```');
+                    }).catch(() => {
+                        message.reply('there was an error trying to execute that command!');
+                    });
+                })
+                .catch(() => {
+                    message.reply('there was an error trying to execute that command!');
+                });
                 break;
 
             case 'ranked':
